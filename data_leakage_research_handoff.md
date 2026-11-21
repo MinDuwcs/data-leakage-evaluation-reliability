@@ -537,7 +537,11 @@ Quy mô dự kiến: 4–5 thành viên.
 
 Gộp Literature Review vào Team Lead; các phần dataset, baseline và thực nghiệm được phân bổ lại theo năng lực thành viên.
 
-**OPEN:** Tên thành viên, năng lực, deadline cá nhân và phân công cuối cùng chưa được cung cấp.
+### 12.3. Phân công cá nhân đã xác nhận
+- **User phụ trách:**
+  1. **Baseline Pipeline** (Clean Leak-free benchmark trên `fraud_detection.csv`).
+  2. **Thực nghiệm P6:** Feature Selection Leakage (Preprocessing Leakage).
+  3. **Thực nghiệm F2:** Noisy Target Leakage (Feature Leakage).
 
 ---
 
@@ -670,6 +674,9 @@ Chỉ bắt đầu khi Priority 0 hoàn tất và được nhóm xác nhận:
 | D-008 | Giữ clean holdout độc lập | `PROPOSED` | Nguyên tắc thiết kế cần đưa vào protocol cuối |
 | D-009 | Kiểm tra duplicate trước khi quyết định tạo duplicate nhân tạo | `PROPOSED` | Chưa audit dataset |
 | D-010 | Chưa viết code trước khi duyệt Experimental Protocol | `CONFIRMED` | Yêu cầu quy trình hiện tại |
+| D-011 | Dùng pathlib tự động dò Project Root cho DATA_PATH | `CONFIRMED` | Đảm bảo code chạy trên mọi máy khi push Git |
+| D-012 | Thiết lập Baseline trong preprocess.ipynb chuẩn chống rò rỉ | `CONFIRMED` | Stratified 80/20, Clean Holdout, ColumnTransformer |
+| D-013 | Phân công phụ trách Baseline, P6 (Feature Selection) và F2 (Noisy Target) | `CONFIRMED` | Xác định rõ scope cá nhân để phối hợp nhóm |
 
 ### 17.1. Decision Log Template
 
