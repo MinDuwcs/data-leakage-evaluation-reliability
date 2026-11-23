@@ -95,21 +95,98 @@ Nghiên cứu lựa chọn 3 thuật toán đại diện cho các trường phá
 
 ## 5. Trạng thái hiện tại của đề tài
 
-- **Giai đoạn hiện tại:** Planning P1/P2 — Hoàn thành Dataset Audit, chuẩn bị khóa Experimental Protocol v2.0.
-- **Trạng thái mã nguồn:** Chưa bước vào giai đoạn viết code huấn luyện mô hình chính thức. Mọi thực nghiệm sẽ được bắt đầu sau khi Experimental Protocol v2.0 được phê duyệt.
-- **Quy tắc học thuật:** Không đưa ra kết luận hoặc công bố số liệu khi chưa hoàn thành thực nghiệm có đối chứng và tái lập được kết quả.
+- **Giai đoạn hiện tại:** Execution P3 — Đã hoàn thành triển khai thực nghiệm đối chứng trên 2 kịch bản rò rỉ dữ liệu:
+  - F3: Post-event Feature Leakage (khảo sát theo 4 mức độ phủ kiểm toán: 10%, 30%, 50%, 80%).
+  - F4: Target Encoding Leakage (đối chứng Out-of-Fold vs rò rỉ nhãn Validation).
+- **Quy mô thực nghiệm:** 5 seeds lặp lại `[13, 37, 71, 101, 131]`, đánh giá trên 3 thuật toán đại diện: Logistic Regression, Decision Tree và Random Forest.
+- **Vị trí lưu trữ mã nguồn chi tiết:** Toàn bộ pipeline, scripts thực thi, dữ liệu kết quả raw và biểu đồ trực quan hóa được lưu trữ và phát triển tại nhánh `feature-leakage`.
 
 ---
 
-## 6. Hướng dẫn thiết lập môi trường
+## 6. Kết quả và Đầu ra thực nghiệm (Results & Deliverables)
 
-### 6.1. Yêu cầu hệ thống
+### 6.1. Tóm tắt kết quả kịch bản F3 — Post-event Feature Leakage
+
+Khảo sát tác động khi đưa đặc trưng hậu nghiệm `Investigation_Result` (kết quả thanh tra gian lận sau giao dịch) vào mô hình với độ phủ kiểm toán (Audit Coverage) tăng dần:
+
+- **Hiện tượng lạm phát điểm số (Metric Inflation):** Khi độ phủ kiểm toán tăng từ 10% lên 80%, điểm Average Precision (AP) nội bộ bị thổi phồng giả tạo từ mức ~0.12 lên đến ~0.44 trên Logistic Regression và Random Forest (so với Baseline sạch chỉ đạt ~0.05).
+- **Khoảng cách lạc quan (Optimism Gap):** Khi mang mô hình đã huấn luyện có đặc trưng hậu nghiệm triển khai trên tập kiểm thử độc lập sạch (Clean Holdout - nơi giao dịch mới chưa từng được thanh tra), điểm AP sụt giảm đột ngột về mức ngẫu nhiên (~0.05). Optimism Gap nới rộng tuyến tính theo độ phủ kiểm toán (đạt đỉnh chênh lệch +0.3895 trên Logistic Regression ở mức 80% coverage).
+- **Độ nhạy thuật toán:** Cả 3 họ mô hình (tuyến tính, cây quyết định, rừng ngẫu nhiên) đều bị đánh lừa nghiêm trọng và phụ thuộc gần như tuyệt đối vào đặc trưng hậu nghiệm khi nó xuất hiện.
+
+Bảng tổng hợp Optimism Gap tiêu biểu (AP và F1) trên nhánh `feature-leakage`:
+
+| Thuật toán | Độ phủ | AP Nội bộ (Contam) | AP Triển khai (Holdout) | Optimism Gap (AP) | F1 Nội bộ | F1 Triển khai | Optimism Gap (F1) |
+|---|---|---|---|---|---|---|---|
+| decision_tree | 10% | 0.0972 | 0.0518 | +0.0453 | 0.0981 | 0.0072 | +0.0910 |
+| decision_tree | 30% | 0.1768 | 0.0529 | +0.1239 | 0.1967 | 0.0059 | +0.1908 |
+| decision_tree | 50% | 0.2655 | 0.0514 | +0.2141 | 0.2996 | 0.0073 | +0.2923 |
+| decision_tree | 80% | 0.3885 | 0.0516 | +0.3369 | 0.3607 | 0.0089 | +0.3518 |
+| logistic_regression | 10% | 0.1240 | 0.0521 | +0.0719 | 0.0682 | 0.0000 | +0.0682 |
+| logistic_regression | 30% | 0.2194 | 0.0523 | +0.1672 | 0.1534 | 0.0000 | +0.1534 |
+| logistic_regression | 50% | 0.3176 | 0.0526 | +0.2650 | 0.2423 | 0.0000 | +0.2423 |
+| logistic_regression | 80% | 0.4413 | 0.0518 | +0.3895 | 0.3475 | 0.0000 | +0.3475 |
+| random_forest | 10% | 0.1207 | 0.0542 | +0.0665 | 0.0516 | 0.0000 | +0.0516 |
+| random_forest | 30% | 0.2129 | 0.0552 | +0.1577 | 0.1209 | 0.0000 | +0.1209 |
+| random_forest | 50% | 0.3040 | 0.0549 | +0.2491 | 0.1563 | 0.0000 | +0.1563 |
+| random_forest | 80% | 0.4357 | 0.0537 | +0.3819 | 0.2144 | 0.0000 | +0.2144 |
+
+### 6.2. Tóm tắt kết quả kịch bản F4 — Target Encoding Leakage
+
+Khảo sát tác động khi mã hóa các biến phân loại danh mục (`Location`, `Payment_Method`, `Transaction_Type`, `Device_Used`) bằng xác suất mục tiêu:
+
+- **Hiện tượng rò rỉ nhãn Validation:** Khi quy trình mã hóa sử dụng nhãn của toàn bộ tập phát triển (bao gồm cả tập Validation), điểm số nội bộ trên Validation tăng ảo (Delta Contam đạt +0.0025 AP và +0.0079 F1 trên Decision Tree).
+- **Hiệu quả phòng ngừa của Out-of-Fold (OOF):** Khi áp dụng Out-of-Fold cross-fitting đúng chuẩn (chỉ fit trên các fold con của Train và transform sang Validation), hiện tượng ghi nhớ nhãn được triệt tiêu, bảo toàn điểm số đánh giá khớp hoàn toàn với năng lực tổng quát hóa thực tế trên Clean Holdout.
+
+### 6.3. Danh mục các đầu ra nghiên cứu đã hoàn thành (Deliverables)
+
+Toàn bộ các thành phần dưới đây đã được xây dựng hoàn chỉnh và lưu trữ tại nhánh `feature-leakage`:
+
+1. **Hệ thống mã nguồn mô-đun hóa (`src/`):**
+   - `src/config/`: Quản lý cấu hình đường dẫn, danh sách seeds, siêu tham số và ngưỡng leakage.
+   - `src/data/`: `loader.py` (tải và kiểm toán kiểu dữ liệu), `splitter.py` (Group-based disjoint train/val/holdout split).
+   - `src/preprocessing/`: Xây dựng pipeline tiền xử lý độc lập fit-transform, triển khai OOF Target Encoder.
+   - `src/models/`: Đóng gói 3 bộ phân loại Logistic Regression, Decision Tree, Random Forest.
+   - `src/evaluation/`: Tính toán đa chỉ số (AP, ROC-AUC, F1, Precision, Recall) và trích xuất độ lệch Optimism Gap.
+   - `src/scenarios/`: Triển khai độc lập kịch bản F3 (`f3_post_event.py`) và F4 (`f4_target_encoding.py`).
+2. **Scripts điều phối và trực quan hóa:**
+   - `run_experiments.py`: Script chạy tự động toàn bộ thực nghiệm đa seed, kết xuất dữ liệu CSV.
+   - `plot_results.py`: Script sinh biểu đồ xuất bản khoa học chất lượng cao (DPI 300).
+3. **Báo cáo và biểu đồ kết quả (`results/`):**
+   - `results/f3_post_event_results.csv`: Dữ liệu đo lường chi tiết 5 seeds cho F3.
+   - `results/f4_target_encoding_results.csv`: Dữ liệu đo lường chi tiết 5 seeds cho F4.
+   - `results/summary_f3_f4_report.md`: Báo cáo phân tích tổng hợp đầy đủ số liệu trung bình và độ lệch chuẩn.
+   - `results/figures/`:
+     - `f3_dose_response_optimism_gap.png`: Biểu đồ liều lượng - đáp ứng của Optimism Gap theo Coverage.
+     - `f3_metric_inflation_comparison.png`: So sánh mức độ lạm phát điểm số AP giữa các mô hình.
+     - `f4_target_encoding_delta.png`: Trực quan hóa độ lệch điểm số khi rò rỉ nhãn Validation.
+
+---
+
+## 7. Điều hướng nhánh mã nguồn (Branch Navigation)
+
+Kho lưu trữ được tổ chức theo chiến lược phân nhánh chức năng:
+
+- **Nhánh `main`:** Lưu trữ tài liệu tổng quan, phạm vi nghiên cứu và tóm tắt kết quả thực nghiệm.
+- **Nhánh `feature-leakage`:** Lưu trữ toàn bộ mã nguồn thực thi, kịch bản kiểm thử, dữ liệu raw kết quả và các biểu đồ phân tích.
+
+Để kiểm tra chi tiết mã nguồn và tái lập thực nghiệm, thực hiện chuyển nhánh:
+
+```bash
+# Chuyển sang nhánh chứa mã nguồn và kết quả thực nghiệm
+git checkout feature-leakage
+```
+
+---
+
+## 8. Hướng dẫn thiết lập môi trường
+
+### 8.1. Yêu cầu hệ thống
 
 - Hệ điều hành: Linux / macOS / Windows
 - Ngôn ngữ: Python 3.11+
 - Công cụ quản lý phiên bản: Git
 
-### 6.2. Cài đặt môi trường ảo
+### 8.2. Cài đặt môi trường ảo
 
 Khuyến nghị sử dụng `venv` hoặc `conda` để cô lập môi trường thực nghiệm:
 
@@ -124,7 +201,7 @@ source .venv/bin/activate
 # .venv\Scripts\Activate.ps1
 ```
 
-### 6.3. Cài đặt các thư viện phụ thuộc
+### 8.3. Cài đặt các thư viện phụ thuộc
 
 Cài đặt các gói thư viện khoa học dữ liệu và học máy:
 
@@ -133,9 +210,21 @@ pip install --upgrade pip
 pip install numpy pandas scikit-learn imbalanced-learn matplotlib seaborn jupyter notebook
 ```
 
+### 8.4. Tái lập thực nghiệm (trên nhánh feature-leakage)
+
+Sau khi chuyển sang nhánh `feature-leakage`, thực hiện các lệnh sau để chạy thực nghiệm và xuất biểu đồ:
+
+```bash
+# Chạy thực nghiệm song song F3 và F4 với 5 seeds
+python run_experiments.py
+
+# Sinh biểu đồ trực quan hóa kết quả
+python plot_results.py
+```
+
 ---
 
-## 7. Tài liệu tham chiếu
+## 9. Tài liệu tham chiếu
 
 - [Báo cáo kiểm toán dữ liệu: MarkDown/dataset_audit.md](MarkDown/dataset_audit.md)
 - [Kế hoạch điều chỉnh nghiên cứu v3.0: MarkDown/KE_HOACH_DIEU_CHINH_DATA_LEAKAGE_DATASET_MOI.md](MarkDown/KE_HOACH_DIEU_CHINH_DATA_LEAKAGE_DATASET_MOI.md)
