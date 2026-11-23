@@ -93,13 +93,21 @@ Nghiên cứu lựa chọn 3 thuật toán đại diện cho các trường phá
 
 ---
 
-## 5. Trạng thái hiện tại của đề tài
+## 5. Phân công nhiệm vụ và Trạng thái đề tài
 
-- **Giai đoạn hiện tại:** Execution P3 — Đã hoàn thành triển khai thực nghiệm đối chứng trên 2 kịch bản rò rỉ dữ liệu:
-  - F3: Post-event Feature Leakage (khảo sát theo 4 mức độ phủ kiểm toán: 10%, 30%, 50%, 80%).
-  - F4: Target Encoding Leakage (đối chứng Out-of-Fold vs rò rỉ nhãn Validation).
+### 5.1. Phân công trách nhiệm nghiên cứu
+
+- **Thành viên `MinDuwcs` (Đã hoàn thành 100%):**
+  - Đảm nhận toàn diện việc thiết kế, xây dựng và thực nghiệm 2 kịch bản rò rỉ dữ liệu: F3 (Post-event Feature Leakage) và F4 (Target Encoding Leakage).
+  - Hoàn thiện toàn bộ kiến trúc pipeline hướng mô-đun trong `src/` (loader, splitter, preprocessing, models, metrics, scenarios), scripts điều phối thực nghiệm tự động (`run_experiments.py`), công cụ trực quan hóa kết quả khoa học (`plot_results.py`), và báo cáo tổng hợp kết quả tại nhánh `feature-leakage`.
+- **Các thành viên khác trong nhóm:**
+  - Đảm nhận các kịch bản thực nghiệm còn lại gồm F1 (Preprocessing Leakage) và F2 (Duplicate / User-level Leakage) trên các nhánh làm việc độc lập tương ứng.
+
+### 5.2. Trạng thái hiện tại của đề tài
+
+- **Giai đoạn hiện tại:** Execution P3 — Đã hoàn thành triển khai thực nghiệm đối chứng trên 2 kịch bản rò rỉ dữ liệu F3 và F4 do thành viên `MinDuwcs` phụ trách.
 - **Quy mô thực nghiệm:** 5 seeds lặp lại `[13, 37, 71, 101, 131]`, đánh giá trên 3 thuật toán đại diện: Logistic Regression, Decision Tree và Random Forest.
-- **Vị trí lưu trữ mã nguồn chi tiết:** Toàn bộ pipeline, scripts thực thi, dữ liệu kết quả raw và biểu đồ trực quan hóa được lưu trữ và phát triển tại nhánh `feature-leakage`.
+- **Vị trí lưu trữ mã nguồn chi tiết:** Toàn bộ pipeline, scripts thực thi, dữ liệu kết quả raw và biểu đồ trực quan hóa của phần việc F3 và F4 được lưu trữ và phát triển độc lập tại nhánh `feature-leakage`.
 
 ---
 
